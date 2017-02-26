@@ -17,7 +17,7 @@
 </template>
 
 <script>
-import Spinner from '../components/Spinner.vue'
+import Spinner from '../../components/Spinner.vue'
 
 function fetchUser (store) {
   return store.dispatch('FETCH_USER', {

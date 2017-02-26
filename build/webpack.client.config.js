@@ -23,7 +23,10 @@ const config = Object.assign({}, base, {
     }),
     // generate output HTML
     new HTMLPlugin({
-      template: 'src/index.template.html'
+      title: 'demo',
+      // template: 'client/views/index.template.html'
+      template: 'client/views/index.pug',
+      filename: '../../index.html'
     })
   ])
 })

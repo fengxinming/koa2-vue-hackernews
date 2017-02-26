@@ -28,8 +28,8 @@
 </template>
 
 <script>
-import Spinner from '../components/Spinner.vue'
-import Comment from '../components/Comment.vue'
+import Spinner from '../../components/Spinner.vue'
+import Comment from '../../components/Comment.vue'
 
 function fetchItem (store) {
   return store.dispatch('FETCH_ITEMS', {

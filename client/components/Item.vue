@@ -27,7 +27,7 @@
 </template>
 
 <script>
-import { timeAgo } from '../filters'
+import { timeAgo } from '../js/filters'
 
 export default {
   name: 'news-item',

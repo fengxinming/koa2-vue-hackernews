@@ -4,7 +4,7 @@ const vueConfig = require('./vue-loader.config')
 module.exports = {
   devtool: '#source-map',
   entry: {
-    app: './src/client-entry.js',
+    app: './client/js/client-entry.js',
     vendor: [
       'es6-promise',
       'firebase/app',
@@ -16,8 +16,8 @@ module.exports = {
     ]
   },
   output: {
-    path: path.resolve(__dirname, '../dist'),
-    publicPath: '/dist/',
+    path: path.resolve(__dirname, '../public/js/assets'),
+    publicPath: '/js/assets/',
     filename: '[name].[chunkhash].js'
   },
   resolve: {
@@ -27,8 +27,7 @@ module.exports = {
   },
   module: {
     noParse: /es6-promise\.js$/, // avoid webpack shimming process
-    rules: [
-      {
+    rules: [{
         test: /\.vue$/,
         loader: 'vue-loader',
         options: vueConfig
@@ -48,6 +47,10 @@ module.exports = {
           limit: 10000,
           name: '[name].[ext]?[hash]'
         }
+      },
+      {
+        test: /\.pug$/,
+        loaders: 'pug-loader',
       }
     ]
   },
