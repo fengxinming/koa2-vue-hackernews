@@ -6,7 +6,8 @@ logs
 node_modules
 public/js
 public/css
-dist
+public/assets
+index.html
 coverage
 
 .idea/

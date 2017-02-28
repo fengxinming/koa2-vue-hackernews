@@ -26,7 +26,7 @@ const config = Object.assign({}, base, {
       title: 'demo',
       // template: 'client/views/index.template.html'
       template: 'client/views/index.pug',
-      filename: '../../index.html'
+      filename: '../index.html'
     })
   ])
 })
