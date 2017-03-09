@@ -7,7 +7,7 @@ const PROJECT_DIR = process.cwd();
 module.exports = {
   //公用全局属性
   public: {
-    PORT: 5500,
+    port: 5500,
 
     //工程根目录
     projectDir: PROJECT_DIR,

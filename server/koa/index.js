@@ -1,23 +1,59 @@
 'use strict';
 
+const fs = require('fs');
 const Koa = require('koa');
 const app = new Koa();
 const pathApi = require('path');
 const slacker = require('koa2-middleware-slacker');
+const vueServerRenderer = require('vue-server-renderer');
+const lruCache = require('lru-cache');
+const config = require('../../conf/server');
 
-const PROJECT_DIR = process.cwd();
 
-const STATIC_DIR = pathApi.resolve(PROJECT_DIR, './public');
+function createRenderer(bundle) {
+  return vueServerRenderer.createBundleRenderer(bundle, {
+    cache: lruCache({
+      max: 1000,
+      maxAge: 1000 * 60 * 15
+    })
+  });
+}
 
-const CLIENT_DIR = pathApi.resolve(PROJECT_DIR, './client');
+function parseIndex(template) {
+  const contentMarker = '<!-- APP -->'
+  const i = template.indexOf(contentMarker)
+  return {
+    head: template.slice(0, i),
+    tail: template.slice(i + contentMarker.length)
+  }
+}
 
-const VIEWS_DIR = pathApi.resolve(CLIENT_DIR, './views');
+const app = config.app;
+const isProd = config.NODE_ENV === 'production';
+let indexHTML = '';
+let renderer = null;
+if (isProd) {
+  renderer = createRenderer(fs.readFileSync(resolve('./public/assets/server-bundle.js'), 'utf-8'))
+  indexHTML = parseIndex(fs.readFileSync(resolve('./public/index.html'), 'utf-8'))
+} else {
+  require('./webpack-dev')(app, {
+    bundleUpdated: bundle => {
+      renderer = createRenderer(bundle)
+    },
+    indexUpdated: index => {
+      indexHTML = parseIndex(index)
+    }
+  })
+}
 
 slacker(app, {
-  staticDir: STATIC_DIR,
-  clientDir: CLIENT_DIR,
-  viewsDir: VIEWS_DIR,
-  viewsCache: process.env.NODE_ENV === 'development'
+  staticDir: app.staticDir,
+  clientDir: app.clientDir,
+  viewsDir: app.viewsDir,
+  viewsCache: isProd
 });
+
+app.use('/manifest.json', serve('./manifest.json'));
+app.use('/public', serve('./public'));
 
 module.exports = app;
