@@ -25,6 +25,8 @@ module.exports = {
     logsDir: path.resolve(PROJECT_DIR, 'logs'),
 
     //静态文件目录
-    staticDir: path.resolve(PROJECT_DIR, 'public')
+    staticDir: path.resolve(PROJECT_DIR, 'public'),
+
+    staticPath: '/static'
   }
 };

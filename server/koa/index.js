@@ -3,10 +3,10 @@
 const fs = require('fs');
 const Koa = require('koa');
 const app = new Koa();
-const pathApi = require('path');
 const slacker = require('koa2-middleware-slacker');
 const vueServerRenderer = require('vue-server-renderer');
 const lruCache = require('lru-cache');
+const serialize = require('serialize-javascript');
 const config = require('../../conf/server');
 
 
@@ -28,13 +28,13 @@ function parseIndex(template) {
   }
 }
 
-const app = config.app;
+const appConfig = config.app;
 const isProd = config.NODE_ENV === 'production';
 let indexHTML = '';
 let renderer = null;
 if (isProd) {
-  renderer = createRenderer(fs.readFileSync(resolve('./public/assets/server-bundle.js'), 'utf-8'))
-  indexHTML = parseIndex(fs.readFileSync(resolve('./public/index.html'), 'utf-8'))
+  renderer = createRenderer(fs.readFileSync(resolve('./static/assets/server-bundle.js'), 'utf-8'))
+  indexHTML = parseIndex(fs.readFileSync(resolve('./static/index.html'), 'utf-8'))
 } else {
   require('./webpack-dev')(app, {
     bundleUpdated: bundle => {
@@ -47,13 +47,60 @@ if (isProd) {
 }
 
 slacker(app, {
-  staticDir: app.staticDir,
-  clientDir: app.clientDir,
-  viewsDir: app.viewsDir,
+  staticDir: appConfig.staticDir,
+  staticPath: appConfig.staticPath,
+  staticMappings: {
+    './manifest.json': '/manifest.json'
+  },
+  clientDir: appConfig.clientDir,
+  viewsDir: appConfig.viewsDir,
   viewsCache: isProd
 });
 
-app.use('/manifest.json', serve('./manifest.json'));
-app.use('/public', serve('./public'));
+app.use(function (ctx) {
+  if (!renderer) {
+    ctx.body = '服务器偷懒了，刷新唤醒它？';
+    return;
+  }
+
+  ctx.type = 'text/html; charset=utf-8';
+
+  var s = Date.now();
+  const context = { url: ctx.url };
+  const renderStream = renderer.renderToStream(context);
+  const res = ctx.res;
+
+  renderStream.once('data', () => {
+    res.write(indexHTML.head);
+  });
+
+  renderStream.on('data', (chunk) => {
+    res.write(chunk);
+  });
+
+  renderStream.on('end', () => {
+    // 初始化state
+    if (context.initialState) {
+      res.write(
+        `<script>window.__INITIAL_STATE__=${
+          serialize(context.initialState, { isJSON: true })
+        }</script>`
+      )
+    }
+    res.end(indexHTML.tail);
+    console.log(`whole request: ${Date.now() - s}ms`)
+  })
+
+  renderStream.on('error', err => {
+    if (err && err.code === '404') {
+      res.status(404).end('404 | Page Not Found')
+      return;
+    }
+    // Render Error Page or Redirect
+    res.status(500).end('Internal Error 500');
+    console.error(`error during render : ${ctx.url}`);
+    console.error(err);
+  })
+})
 
 module.exports = app;

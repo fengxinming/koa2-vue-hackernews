@@ -3,8 +3,8 @@
 const path = require('path');
 const webpack = require('webpack');
 const MFS = require('memory-fs');
-const clientConfig = require('./webpack.client.config');
-const serverConfig = require('./webpack.server.config');
+const clientConfig = require('../../build/webpack.client.config');
+const serverConfig = require('../../build/webpack.server.config');
 
 function middleware(doIt, req, res) {
   var originalEnd = res.end;
@@ -36,7 +36,7 @@ module.exports = function setupDevServer(app, opts) {
       colors: true,
       chunks: false
     }
-  })
+  });
   app.use(async function (ctx, next) {
     ctx.webpack = devMiddleware;
     var req = this.req;
