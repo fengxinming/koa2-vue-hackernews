@@ -39,7 +39,7 @@ module.exports = function setupDevServer(app, opts) {
   });
   app.use(async function (ctx, next) {
     ctx.webpack = devMiddleware;
-    var req = this.req;
+    var req = ctx.req;
     var runNext = await middleware(devMiddleware, req, {
       end: function (content) {
         ctx.body = content;
@@ -64,7 +64,7 @@ module.exports = function setupDevServer(app, opts) {
   // hot middleware
   const hotMiddleware = require('webpack-hot-middleware')(clientCompiler);
   app.use(async function (ctx, next) {
-    let nextStep = await middleware(hotMiddleware, this.req, this.res);
+    let nextStep = await middleware(hotMiddleware, ctx.req, ctx.res);
     if (nextStep && next) {
       await next();
     }

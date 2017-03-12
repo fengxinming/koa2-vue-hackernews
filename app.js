@@ -9,7 +9,7 @@ const appLog = logFactory.getLogger('app');
 const app = require('./server/koa');
 
 const http = require('http');
-const port = +process.env.PORT || serverCfg.PORT;
+const port = +process.env.port || serverCfg.port;
 const server = http.createServer(app.callback());
 
 server.on('error', (error) => {
