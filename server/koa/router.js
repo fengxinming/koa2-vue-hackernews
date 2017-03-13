@@ -6,7 +6,6 @@ const Router = require('koa-trie-router');
 const vueServerRenderer = require('vue-server-renderer');
 const lruCache = require('lru-cache');
 const serialize = require('serialize-javascript');
-const passThrough = require('stream').PassThrough;
 
 const PROJECT_DIR = process.cwd();
 
@@ -61,58 +60,53 @@ module.exports = (app) => {
   let router = new Router();
 
   router
-    .get(async(ctx, next) => {
+    .get((ctx, next) => {
       if (!renderer) {
         ctx.body = '服务器偷懒了，刷新唤醒它？';
         return;
       }
+
       const start = Date.now();
       ctx.type = 'text/html; charset=utf-8';
+      ctx.respond = false;
 
       const context = { url: ctx.url };
       const renderStream = renderer.renderToStream(context);
       const res = ctx.res;
-      ctx.respond = false;
 
-      await new Promise((resolve, reject) => {
+      renderStream.once('data', () => {
+        responseTime(res, start);
+        res.write(indexHTML.head);
+      });
 
-        renderStream.once('data', () => {
-          responseTime(res, start);
-          res.write(indexHTML.head);
-        });
+      renderStream.on('data', (chunk) => {
+        res.write(chunk);
+      });
 
-        renderStream.on('data', (chunk) => {
-          res.write(chunk);
-        });
-
-        renderStream.on('end', () => {
-          // 初始化state
-          if (context.initialState) {
-            res.write(
-              `<script>window.__INITIAL_STATE__=${
+      renderStream.on('end', () => {
+        // 初始化state
+        if (context.initialState) {
+          res.write(
+            `<script>window.__INITIAL_STATE__=${
                 serialize(context.initialState, { isJSON: true })
               }</script>`
-            );
-          }
-          res.statusCode = 200;
-          res.end(indexHTML.tail);
-          resolve();
-        });
+          );
+        }
+        res.statusCode = 200;
+        res.end(indexHTML.tail);
+      });
 
-        renderStream.on('error', err => {
-          if (err && err.code === '404') {
-            res.statusCode = 404;
-            res.end('404 | Page Not Found')
-            return;
-          }
-          // 渲染错误页或者重定向
-          res.statusCode = 500;
-          res.end('Internal Error 500');
-          console.error(`error during render : ${ctx.url}`);
-          console.error(err);
-          reject(err);
-        });
-
+      renderStream.on('error', err => {
+        if (err && err.code === '404') {
+          res.statusCode = 404;
+          res.end('404 | Page Not Found')
+          return;
+        }
+        // 渲染错误页或者重定向
+        res.statusCode = 500;
+        res.end('Internal Error 500');
+        console.error(`error during render : ${ctx.url}`);
+        console.error(err);
       });
     });
 

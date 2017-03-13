@@ -4,7 +4,7 @@
   "author": "Evan You <yyx990803@gmail.com>",
   "private": true,
   "scripts": {
-    "dev": "node app",
+    "dev": "cross-env NODE_ENV=development nodemon",
     "start": "cross-env NODE_ENV=production node app",
     "build": "rimraf public/assets && npm run build:client && npm run build:server",
     "build:client": "cross-env NODE_ENV=production webpack --config build/webpack.client.config.js --progress --hide-modules",
@@ -51,6 +51,7 @@
     "extract-text-webpack-plugin": "^2.0.0-beta.3",
     "file-loader": "^0.10.0",
     "html-webpack-plugin": "^2.24.1",
+    "nodemon": "^1.11.0",
     "pug-loader": "^2.3.0",
     "rimraf": "^2.5.4",
     "stylus": "^0.54.5",
