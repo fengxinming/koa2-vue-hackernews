@@ -6,30 +6,52 @@ const MFS = require('memory-fs');
 const clientConfig = require('../../build/webpack.client.config');
 const serverConfig = require('../../build/webpack.server.config');
 
-function middleware(doIt, req, res) {
-  var originalEnd = res.end;
+function expressTokoa2(middleware) {
+  return (ctx, next) => {
+    const req = ctx.req;
+    middleware(req, {
+      locals: {
+        set webpackStats(val) {
+          ctx.state.webpackStats = val;
+        },
 
-  return function (done) {
-    res.end = function () {
-      originalEnd.apply(this, arguments);
-      done(null, 0);
-    };
-    doIt(req, res, function () {
-      done(null, 1);
-    })
-  }
+        get webpackStats() {
+          return ctx.state.webpackStats;
+        }
+      },
+      setHeader() {
+        ctx.set.apply(ctx, arguments);
+      },
+      set statusCode(val) {
+        ctx.statue = val;
+      },
+      get statusCode() {
+        return ctx.statue;
+      },
+      end(content) {
+        ctx.body = content;
+      },
+      writeHead(status, headers) {
+        ctx.status = status;
+        ctx.set(headers);
+      },
+      write(data) {
+        ctx.body += data;
+      }
+    }, next);
+  };
 }
 
 module.exports = function setupDevServer(app, opts) {
-  clientConfig.entry.app = ['webpack-hot-middleware/client', clientConfig.entry.app]
-  clientConfig.output.filename = '[name].js'
+  clientConfig.entry.app = ['webpack-hot-middleware/client', clientConfig.entry.app];
+  clientConfig.output.filename = '[name].js';
   clientConfig.plugins.push(
     new webpack.HotModuleReplacementPlugin(),
     new webpack.NoEmitOnErrorsPlugin()
   )
 
   // dev middleware
-  const clientCompiler = webpack(clientConfig)
+  const clientCompiler = webpack(clientConfig);
   const devMiddleware = require('webpack-dev-middleware')(clientCompiler, {
     publicPath: clientConfig.output.publicPath,
     stats: {
@@ -37,21 +59,7 @@ module.exports = function setupDevServer(app, opts) {
       chunks: false
     }
   });
-  app.use(async function (ctx, next) {
-    ctx.webpack = devMiddleware;
-    var req = ctx.req;
-    var runNext = await middleware(devMiddleware, req, {
-      end: function (content) {
-        ctx.body = content;
-      },
-      setHeader: function () {
-        ctx.set.apply(ctx, arguments);
-      }
-    });
-    if (runNext) {
-      await next();
-    }
-  });
+  app.use(expressTokoa2(devMiddleware));
   clientCompiler.plugin('done', () => {
     const fs = devMiddleware.fileSystem;
     const filePath = path.join(clientConfig.output.path, '../index.html');
@@ -63,12 +71,7 @@ module.exports = function setupDevServer(app, opts) {
 
   // hot middleware
   const hotMiddleware = require('webpack-hot-middleware')(clientCompiler);
-  app.use(async function (ctx, next) {
-    let nextStep = await middleware(hotMiddleware, ctx.req, ctx.res);
-    if (nextStep && next) {
-      await next();
-    }
-  });
+  app.use(expressTokoa2(hotMiddleware));
 
   // watch and update server renderer
   const serverCompiler = webpack(serverConfig);

@@ -41,7 +41,6 @@ module.exports = (app) => {
 
   const config = require('../../conf/server');
 
-  const appConfig = config.app;
   const isProd = config.NODE_ENV === 'production';
   let indexHTML = '';
   let renderer = null;
@@ -62,7 +61,7 @@ module.exports = (app) => {
   let router = new Router();
 
   router
-    .get('/', async(ctx, next) => {
+    .get(async(ctx, next) => {
       if (!renderer) {
         ctx.body = '服务器偷懒了，刷新唤醒它？';
         return;
@@ -73,7 +72,7 @@ module.exports = (app) => {
       const context = { url: ctx.url };
       const renderStream = renderer.renderToStream(context);
       const res = ctx.res;
-      this.body = passThrough();
+      ctx.respond = false;
 
       await new Promise((resolve, reject) => {
 

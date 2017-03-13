@@ -63,6 +63,8 @@ if (process.env.NODE_ENV === 'production') {
       staticFileGlobsIgnorePatterns: [/index\.html$/, /\.map$/]
     })
   )
+} else {
+  config.output.publicPath = '/__build__/';
 }
 
-module.exports = config
+module.exports = config;

@@ -13,9 +13,8 @@ const isProd = config.NODE_ENV === 'production';
 
 const PROJECT_DIR = process.cwd();
 
-router(app);
-
 slacker(app, {
+  favicon: false,
   staticDir: appConfig.staticDir,
   staticPath: appConfig.staticPath,
   staticMappings: {
@@ -25,5 +24,7 @@ slacker(app, {
   viewsDir: appConfig.viewsDir,
   viewsCache: isProd
 });
+
+router(app);
 
 module.exports = app;
