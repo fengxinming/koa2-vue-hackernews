@@ -27,6 +27,18 @@ module.exports = {
     //静态文件目录
     staticDir: path.resolve(PROJECT_DIR, 'public'),
 
-    staticPath: '/static'
+    //静态资源前缀
+    staticPath: '/static',
+
+    //静态文件的映射
+    staticMappings: {
+      [path.join(PROJECT_DIR, './manifest.json')]: '/manifest.json'
+    },
+
+    //自定义favicon
+    favicon: false,
+
+    // 是否开启模板缓存
+    viewsCache: process.env.NODE_ENV === 'production'
   }
 };
