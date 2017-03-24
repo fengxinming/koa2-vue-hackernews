@@ -1,4 +1,4 @@
-# vue-hackernews-2.0
+# koa2-vue-hackernews
 
 HackerNews clone built with Vue 2.0 + vue-router + vuex, with server-side rendering.
 
@@ -29,7 +29,7 @@ HackerNews clone built with Vue 2.0 + vue-router + vuex, with server-side render
 
 ## Build Setup
 
-**Requires Node.js 6+**
+**Requires Node.js 7.6+**
 
 ``` bash
 # install dependencies
